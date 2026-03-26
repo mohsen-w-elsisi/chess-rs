@@ -4,6 +4,13 @@ pub struct Square {
 }
 
 impl Square {
+    pub fn from_flat_index(index: u8) -> Square {
+        Square {
+            file: index % 8,
+            rank: index / 8,
+        }
+    }
+
     pub fn to_flat_index(&self) -> u8 {
         self.rank * 8 + self.file
     }

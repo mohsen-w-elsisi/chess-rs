@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::piece::{Color, Piece, PieceType};
 use crate::square::{Move, Square};
 
@@ -16,6 +18,16 @@ impl Board {
         }
     }
 
+    pub fn get_pieces(&self)-> Vec<(Square, Piece)> {
+        let mut pieces_vec: Vec<(Square, Piece)> = Vec::new();
+        for (i, piece) in self.pieces.iter().enumerate() {
+            if let Some(p) = piece {
+                pieces_vec.push((Square::from_flat_index(i as u8), *p));
+            }
+        }        
+        pieces_vec
+    }
+    
     pub fn get_piece(&self, square: &Square) -> Option<Piece> {
         self.pieces[square.to_flat_index() as usize]
     }

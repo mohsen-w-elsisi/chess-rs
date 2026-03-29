@@ -49,6 +49,18 @@ impl Board {
             self.place_piece(&mv.to, p);
         }
     }
+
+    pub fn find_piece(&self, piece: Piece) -> Vec<Square> {
+        let mut squares = Vec::new();
+        for (i, p) in self.pieces.iter().enumerate() {
+            if let Some(_piece) = p {
+                if *_piece == piece {
+                    squares.push(Square::from_flat_index(i as u8));
+                }
+            }
+        }
+        squares
+    }
 }
 
 const INITIAL_BOARD_POSITION: [Option<Piece>; 64] = {

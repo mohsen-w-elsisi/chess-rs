@@ -1,6 +1,8 @@
+use std::f32::consts::E;
+
 use crate::{
-    piece,
-    square::{Move, Square},
+    piece_matrix::PieceMatrix,
+    square::{self, Direction, Move, Square},
 };
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -26,7 +28,7 @@ pub enum PieceType {
 }
 
 impl Piece {
-    pub fn is_valid_move(&self, mv: &Move) -> bool {
+    pub fn is_valid_move(&self, mv: &Move, board: &PieceMatrix) -> bool {
         let valid_destinations: Vec<Square> = match self.piece_type {
             PieceType::King => {
                 let potentially_valid_squares = [
@@ -50,24 +52,32 @@ impl Piece {
                 valid_squares
             }
 
-            PieceType::Pawn => match self.color {
-                Color::White => {
-                    let basic_move = mv.from.up().unwrap();
-                    if mv.from.rank == 1 {
-                        vec![basic_move, basic_move.up().unwrap()]
+            PieceType::Pawn => {
+                let direction = match self.color {
+                    Color::White => Direction::Up,
+                    Color::Black => Direction::Down,
+                };
+
+                let basic_move_square = mv.from.move_in_direction(&direction).unwrap();
+
+                if board.get_piece(&basic_move_square).is_some() {
+                    vec![]
+                } else {
+                    let home_rank = match self.color {
+                        Color::White => 1,
+                        Color::Black => 6,
+                    };
+
+                    if mv.from.rank == home_rank {
+                        vec![
+                            basic_move_square,
+                            basic_move_square.move_in_direction(&direction).unwrap(),
+                        ]
                     } else {
-                        vec![basic_move]
-                    }
-                },
-                Color::Black => {
-                    let basic_move = mv.from.down().unwrap();
-                    if mv.from.rank == 6 {
-                        vec![basic_move, basic_move.down().unwrap()]
-                    } else {
-                        vec![basic_move]
+                        vec![basic_move_square]
                     }
                 }
-            },
+            }
 
             PieceType::Rook => mv.from.laterals(),
             PieceType::Bishop => mv.from.diagonals(),
@@ -80,5 +90,32 @@ impl Piece {
         };
 
         valid_destinations.contains(&mv.to)
+    }
+
+    pub fn is_valid_capture_move(&self, mv: &Move, board: &PieceMatrix) -> bool {
+        if self.piece_type != PieceType::Pawn {
+            return self.is_valid_move(mv, board);
+        }
+
+        let valid_capture_destinations: Vec<Square> = {
+            let mut valid_capture_destinations: Vec<Square> = Vec::new();
+
+            let forward_square = match self.color {
+                Color::White => mv.from.up().unwrap(),
+                Color::Black => mv.from.down().unwrap(),
+            };
+
+            if let Ok(right_diagonal_square) = forward_square.right() {
+                valid_capture_destinations.push(right_diagonal_square);
+            }
+
+            if let Ok(left_diagonal_square) = forward_square.left() {
+                valid_capture_destinations.push(left_diagonal_square);
+            }
+
+            valid_capture_destinations
+        };
+
+        valid_capture_destinations.contains(&mv.to)
     }
 }

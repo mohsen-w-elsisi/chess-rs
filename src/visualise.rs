@@ -9,18 +9,22 @@ pub fn visualise_as_ascii(board: &Board) -> String {
     let mut output = vec![' '; 64];
 
     for (mv, piece) in board.get_pieces() {
-        let mut piece_char = match piece.piece_type {
-            PieceType::Pawn => 'P',
-            PieceType::Rook => 'R',
-            PieceType::Knight => 'N',
-            PieceType::Bishop => 'B',
-            PieceType::Queen => 'Q',
-            PieceType::King => 'K',
-        };
+        let piece_char = {
+            let mut piece_char = match piece.piece_type {
+                PieceType::Pawn => 'P',
+                PieceType::Rook => 'R',
+                PieceType::Knight => 'N',
+                PieceType::Bishop => 'B',
+                PieceType::Queen => 'Q',
+                PieceType::King => 'K',
+            };
 
-        piece_char = match piece.color {
-            Color::White => piece_char,
-            Color::Black => piece_char.to_ascii_lowercase(),
+            piece_char = match piece.color {
+                Color::White => piece_char,
+                Color::Black => piece_char.to_ascii_lowercase(),
+            };
+
+            piece_char
         };
 
         output[mv.to_flat_index() as usize] = piece_char;

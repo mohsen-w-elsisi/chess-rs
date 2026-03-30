@@ -209,6 +209,31 @@ impl Direction {
     }
 }
 
+pub const ALL_DIRECTIONS: [Direction; 8] = [
+    Direction::Up,
+    Direction::Down,
+    Direction::Left,
+    Direction::Right,
+    Direction::UpLeft,
+    Direction::UpRight,
+    Direction::DownLeft,
+    Direction::DownRight,
+];
+
+pub const LATTERAL_DIRECTIONS: [Direction; 4] = [
+    Direction::Up,
+    Direction::Down,
+    Direction::Left,
+    Direction::Right,
+];
+
+pub const DIAGONAL_DIRECTIONS: [Direction; 4] = [
+    Direction::UpLeft,
+    Direction::UpRight,
+    Direction::DownLeft,
+    Direction::DownRight,
+];
+
 const FILE_LETTERS: [char; 8] = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]

@@ -1,6 +1,6 @@
 use crate::{
     piece::{Color, Piece, PieceType},
-    square::Square,
+    square::{Direction, Square},
 };
 
 #[derive(Clone)]
@@ -101,5 +101,44 @@ impl PieceMatrix {
             }
         }
         squares
+    }
+
+    pub fn squares_until_blocked(&self, start: &Square, direction: &Direction) -> Vec<Square> {
+        let mut squares: Vec<Square> = Vec::new();
+        let mut current_square = start.move_in_direction(direction);
+
+        while let Ok(s) = current_square {
+            if self.get_piece(&s).is_some() {
+                break;
+            }
+            squares.push(s);
+            current_square = s.move_in_direction(direction);
+        }
+
+        squares
+    }
+
+    pub fn first_occupied_square(&self, start: &Square, direction: &Direction) -> Option<Square> {
+        let unoccupied_squares = self.squares_until_blocked(start, direction);
+        let last_unoccupied_square = unoccupied_squares.last().unwrap_or(start);
+        let candidate = last_unoccupied_square.move_in_direction(direction).ok()?;
+
+        Some(candidate)
+    }
+
+    pub fn first_enemy_piece_square(
+        &self,
+        start: &Square,
+        direction: &Direction,
+        color: Color,
+    ) -> Option<Square> {
+        let first_occupied_square = self.first_occupied_square(start, direction)?;
+        let occupant_piece = self.get_piece(&first_occupied_square).unwrap();
+
+        if occupant_piece.color != color {
+            Some(first_occupied_square)
+        } else {
+            None
+        }
     }
 }

@@ -1,11 +1,14 @@
 mod board;
+mod r#move;
 mod piece;
 mod piece_matrix;
 mod square;
-mod visualise;
 mod standard_notation;
+mod visualise;
 
-use crate::{piece::Color, standard_notation::from_standard_notation, visualise::visualise_as_ascii};
+use crate::{
+    piece::Color, standard_notation::from_standard_notation, visualise::visualise_as_ascii,
+};
 use board::Board;
 
 fn main() {
@@ -25,17 +28,21 @@ fn main() {
         }
 
         // parse the input and apply move
-        let mv = from_standard_notation(input, &board, &current_color);
+        let mv = from_standard_notation(input, &board.matrix(), &current_color);
         match mv {
-            Ok(mv) => {
-                board.apply_move(&mv).unwrap();
-                vis = visualise_as_ascii(&board);
-                println!("{}", vis);
-                current_color = match current_color {
-                    Color::White => Color::Black,
-                    Color::Black => Color::White,
-                };
-            }
+            Ok(mv) => match board.apply_move(&mv) {
+                Ok(_) => {
+                    vis = visualise_as_ascii(&board);
+                    println!("{}", vis);
+                    current_color = match current_color {
+                        Color::White => Color::Black,
+                        Color::Black => Color::White,
+                    };
+                }
+                Err(error) => {
+                    println!("{}", error);
+                }
+            },
             Err(error) => {
                 println!("{:?}", error);
             }

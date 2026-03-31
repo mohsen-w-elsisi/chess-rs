@@ -1,14 +1,19 @@
 use crate::{
-    board::Board,
+    r#move::{CastleSide, Move},
     piece::{Color, Piece, PieceType},
-    square::{FILE_LETTERS, Move, Square},
+    piece_matrix::PieceMatrix,
+    square::{FILE_LETTERS, Square},
 };
 
 pub fn from_standard_notation(
     notation: &str,
-    board: &Board,
+    board: &PieceMatrix,
     color: &Color,
 ) -> Result<Move, StandardNotationParseError> {
+    if notation.contains('O') {
+        return parse_castling_notation(notation, color);
+    }
+
     let is_capture = notation.contains('x');
 
     let piece_type = {
@@ -30,23 +35,39 @@ pub fn from_standard_notation(
     let destination: Square = parse_destination_square(notation)?;
 
     for piece_square in potential_pieces {
-        let mv = Move {
-            from: piece_square,
-            to: destination,
-        };
-        if !is_capture {
-            if piece.is_valid_move(&mv, &board.matrix()) {
-                // todo!("did not handle multiple pieces targetting the same square");
-                return Ok(mv);
+        if is_capture {
+            if piece.is_valid_capture_move(&piece_square, &destination, &board) {
+                return Ok(Move::Capture {
+                    from: piece_square,
+                    to: destination,
+                });
             }
         } else {
-            if piece.is_valid_capture_move(&mv, &board.matrix()) {
-                return Ok(mv);
+            if piece.is_valid_move(&piece_square, &destination, &board) {
+                return Ok(Move::Normal {
+                    from: piece_square,
+                    to: destination,
+                });
             }
         }
     }
 
     return Err(StandardNotationParseError::InvalidDestination);
+}
+
+fn parse_castling_notation(
+    notation: &str,
+    color: &Color,
+) -> Result<Move, StandardNotationParseError> {
+    let castle_side = match notation {
+        "O-O" => Ok(CastleSide::KingSide),
+        "O-O-O" => Ok(CastleSide::QueenSide),
+        _ => Err(StandardNotationParseError::InvalidCastlingNotation),
+    }?;
+    Ok(Move::Castle {
+        color: *color,
+        side: castle_side,
+    })
 }
 
 fn piece_type_from_char(c: char) -> Result<PieceType, StandardNotationParseError> {
@@ -83,4 +104,5 @@ pub enum StandardNotationParseError {
     InvalidDestinationIndicator(String),
     InvalidDestination,
     PieceNotFound(Piece),
+    InvalidCastlingNotation,
 }

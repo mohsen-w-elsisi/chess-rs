@@ -1,10 +1,3 @@
-use std::collections::HashMap;
-
-use crate::{
-    board::Board,
-    piece::{Color, Piece, PieceType},
-};
-
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Square {
     pub file: u8,
@@ -71,56 +64,6 @@ impl Square {
 
     pub fn down_right(&self) -> Result<Square, MoveError> {
         self.move_in_direction(&Direction::DownRight)
-    }
-
-    pub fn ups(&self) -> Vec<Square> {
-        self.search_in_direction(Direction::Up)
-    }
-
-    pub fn downs(&self) -> Vec<Square> {
-        self.search_in_direction(Direction::Down)
-    }
-
-    pub fn lefts(&self) -> Vec<Square> {
-        self.search_in_direction(Direction::Left)
-    }
-
-    pub fn rights(&self) -> Vec<Square> {
-        self.search_in_direction(Direction::Right)
-    }
-
-    pub fn up_lefts(&self) -> Vec<Square> {
-        self.search_in_direction(Direction::UpLeft)
-    }
-
-    pub fn up_rights(&self) -> Vec<Square> {
-        self.search_in_direction(Direction::UpRight)
-    }
-
-    pub fn down_lefts(&self) -> Vec<Square> {
-        self.search_in_direction(Direction::DownLeft)
-    }
-
-    pub fn down_rights(&self) -> Vec<Square> {
-        self.search_in_direction(Direction::DownRight)
-    }
-
-    pub fn laterals(&self) -> Vec<Square> {
-        let mut laterals: Vec<Square> = Vec::new();
-        laterals.extend(self.ups());
-        laterals.extend(self.downs());
-        laterals.extend(self.lefts());
-        laterals.extend(self.rights());
-        laterals
-    }
-
-    pub fn diagonals(&self) -> Vec<Square> {
-        let mut diagonals: Vec<Square> = Vec::new();
-        diagonals.extend(self.up_lefts());
-        diagonals.extend(self.up_rights());
-        diagonals.extend(self.down_lefts());
-        diagonals.extend(self.down_rights());
-        diagonals
     }
 
     pub fn l_shapes(&self) -> Vec<Square> {
@@ -236,11 +179,9 @@ pub const DIAGONAL_DIRECTIONS: [Direction; 4] = [
 
 pub const FILE_LETTERS: [char; 8] = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct Move {
-    pub from: Square,
-    pub to: Square,
-}
-
 #[derive(Debug)]
 pub struct MoveError;
+
+
+
+

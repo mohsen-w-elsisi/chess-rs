@@ -234,7 +234,7 @@ pub const DIAGONAL_DIRECTIONS: [Direction; 4] = [
     Direction::DownRight,
 ];
 
-const FILE_LETTERS: [char; 8] = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+pub const FILE_LETTERS: [char; 8] = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Move {
@@ -242,81 +242,5 @@ pub struct Move {
     pub to: Square,
 }
 
-impl Move {
-    pub fn from_standard_notation(
-        notation: &str,
-        board: &Board,
-        side: Color,
-    ) -> Result<Move, StandardNotationParseError> {
-        let piece_standard_notation: HashMap<char, PieceType> = HashMap::from([
-            ('R', PieceType::Rook),
-            ('N', PieceType::Knight),
-            ('B', PieceType::Bishop),
-            ('Q', PieceType::Queen),
-            ('K', PieceType::King),
-        ]);
-
-        let is_capture = notation.contains('x');
-
-        let piece_type: PieceType = {
-            let first_char = notation.chars().next().unwrap();
-            if first_char.is_ascii_uppercase() {
-                match piece_standard_notation.get(&first_char) {
-                    Some(&piece_type) => Ok(piece_type),
-                    None => Err(StandardNotationParseError::InvalidPieceType(first_char)),
-                }
-            } else if FILE_LETTERS.contains(&first_char) {
-                Ok(PieceType::Pawn)
-            } else {
-                Err(StandardNotationParseError::InvalidPieceType(first_char))
-            }
-        }?;
-
-        let piece = Piece {
-            piece_type,
-            color: side,
-        };
-
-        let potential_pieces = board.find_piece(piece);
-
-        if potential_pieces.is_empty() {
-            return Err(StandardNotationParseError::PieceNotFound(piece));
-        }
-
-        let destination: Square = {
-            let destination_indicater = notation[(notation.len() - 2)..].chars();
-            let file = destination_indicater.clone().next().unwrap() as u8 - 'a' as u8;
-            let rank = destination_indicater.last().unwrap().to_digit(10).unwrap() as u8 - 1;
-            Square { file, rank }
-        };
-
-        for piece_square in potential_pieces {
-            let mv = Move {
-                from: piece_square,
-                to: destination,
-            };
-            if !is_capture {
-                if piece.is_valid_move(&mv, &board.matrix()) {
-                    // todo!("did not handle multiple pieces targetting the same square");
-                    return Ok(mv);
-                }
-            } else {
-                if piece.is_valid_capture_move(&mv, &board.matrix()) {
-                    return Ok(mv);
-                }
-            }
-        }
-
-        return Err(StandardNotationParseError::InvalidDestination);
-    }
-}
-
 #[derive(Debug)]
 pub struct MoveError;
-
-#[derive(Debug)]
-pub enum StandardNotationParseError {
-    InvalidPieceType(char),
-    InvalidDestination,
-    PieceNotFound(Piece),
-}

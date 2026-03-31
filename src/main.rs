@@ -3,8 +3,9 @@ mod piece;
 mod piece_matrix;
 mod square;
 mod visualise;
+mod standard_notation;
 
-use crate::{piece::Color, square::Move, visualise::visualise_as_ascii};
+use crate::{piece::Color, standard_notation::from_standard_notation, visualise::visualise_as_ascii};
 use board::Board;
 
 fn main() {
@@ -24,7 +25,7 @@ fn main() {
         }
 
         // parse the input and apply move
-        let mv = Move::from_standard_notation(input, &board, current_color);
+        let mv = from_standard_notation(input, &board, &current_color);
         match mv {
             Ok(mv) => {
                 board.apply_move(&mv).unwrap();

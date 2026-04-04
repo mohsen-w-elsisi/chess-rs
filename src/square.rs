@@ -5,6 +5,17 @@ pub struct Square {
 }
 
 impl Square {
+    pub fn from_string(notation: &str) -> Result<Square, SquareNotationParseError> {
+        if notation.len() != 2 {
+            return Err(SquareNotationParseError::InvalidLength(notation.len()));
+        }
+        let file_char = notation.chars().nth(0).unwrap();
+        let rank_char = notation.chars().nth(1).unwrap();
+        let file = file_letter_to_index(file_char).ok_or(SquareNotationParseError::InvalidFile(file_char))?;
+        let rank = rank_char.to_digit(10).ok_or(SquareNotationParseError::InvalidRank(rank_char))? as u8;
+        Ok(Square { file, rank })
+    }
+    
     pub fn from_flat_index(index: u8) -> Square {
         Square {
             file: index % 8,
@@ -179,9 +190,15 @@ pub const DIAGONAL_DIRECTIONS: [Direction; 4] = [
 
 pub const FILE_LETTERS: [char; 8] = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
+pub fn file_letter_to_index(file_letter: char) -> Option<u8> {
+    FILE_LETTERS.iter().position(|&c| c == file_letter).and_then(|i| Some(i as u8))
+}
+
 #[derive(Debug)]
 pub struct MoveError;
 
-
-
-
+enum SquareNotationParseError {
+    InvalidFile(char),
+    InvalidRank(char),
+    InvalidLength(usize),
+}

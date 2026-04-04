@@ -1,13 +1,14 @@
 use crate::{
+    board::Board,
     r#move::{CastleSide, Move},
-    piece::{Color, Piece, PieceType},
+    piece::{Color, Piece, PieceType, pawn},
     piece_matrix::PieceMatrix,
-    square::{FILE_LETTERS, Square},
+    square::{FILE_LETTERS, Square, file_letter_to_index},
 };
 
 pub fn from_standard_notation(
     notation: &str,
-    board: &PieceMatrix,
+    board: &Board,
     color: &Color,
 ) -> Result<Move, StandardNotationParseError> {
     if notation.contains('O') {
@@ -15,6 +16,13 @@ pub fn from_standard_notation(
     }
 
     let is_capture = notation.contains('x');
+    
+    if notation.contains('=') {
+        return parse_promotion_notation(notation, color, is_capture);
+    }
+
+    let is_en_passent = notation.ends_with("e.p.") && is_capture;
+
 
     let piece_type = {
         let first_char = notation.chars().next().unwrap();
@@ -32,18 +40,26 @@ pub fn from_standard_notation(
         return Err(StandardNotationParseError::PieceNotFound(piece));
     }
 
-    let destination: Square = parse_destination_square(notation)?;
+    let destination: Square = parse_destination_square(notation, &piece_type, is_capture)?;
+
 
     for piece_square in potential_pieces {
-        if is_capture {
-            if piece.is_valid_capture_move(&piece_square, &destination, &board) {
+        if is_en_passent {
+            if pawn::is_valid_en_passent(&piece_square, &destination, &board.history()).is_ok() {
+                return Ok(Move::EnPassent {
+                    from: piece_square,
+                    to: destination,
+                });
+            }
+        } else if is_capture {
+            if piece.is_valid_capture_move(&piece_square, &destination, &board.matrix()) {
                 return Ok(Move::Capture {
                     from: piece_square,
                     to: destination,
                 });
             }
         } else {
-            if piece.is_valid_move(&piece_square, &destination, &board) {
+            if piece.is_valid_move(&piece_square, &destination, &board.matrix()) {
                 return Ok(Move::Normal {
                     from: piece_square,
                     to: destination,
@@ -53,6 +69,53 @@ pub fn from_standard_notation(
     }
 
     return Err(StandardNotationParseError::InvalidDestination);
+}
+
+fn parse_promotion_notation(
+    notation: &str,
+    color: &Color,
+    is_capture: bool,
+) -> Result<Move, StandardNotationParseError> {
+    let start_square = {
+        let first_char = notation.chars().next().unwrap();
+        let file = file_letter_to_index(first_char)
+            .ok_or(StandardNotationParseError::InvalidFileIndicator(first_char))?;
+        let rank: u8 = match color {
+            Color::White => 6,
+            Color::Black => 1,
+        };
+        Square { file, rank }
+    };
+    let promotion_square = {
+        let promotion_rank = match color {
+            Color::White => 7,
+            Color::Black => 0,
+        };
+
+        let promotion_file = if !is_capture {
+            start_square.file
+        } else {
+            let promotion_file_char = notation.chars().nth(2).unwrap();
+            file_letter_to_index(promotion_file_char).ok_or(
+                StandardNotationParseError::InvalidFileIndicator(promotion_file_char),
+            )?
+        };
+
+        Square {
+            file: promotion_file,
+            rank: promotion_rank,
+        }
+    };
+    let promotion_piece_type = {
+        let promotion_char = notation.chars().last().unwrap();
+        piece_type_from_char(promotion_char)?
+    };
+    return Ok(Move::Promotion {
+        from: start_square,
+        to: promotion_square,
+        capture: is_capture,
+        promotion_piece_type,
+    });
 }
 
 fn parse_castling_notation(
@@ -82,8 +145,12 @@ fn piece_type_from_char(c: char) -> Result<PieceType, StandardNotationParseError
     }
 }
 
-fn parse_destination_square(notation: &str) -> Result<Square, StandardNotationParseError> {
-    let indicater_chars = &notation[notation.len() - 2..];
+fn parse_destination_square(notation: &str, piece_type: &PieceType, is_capture: bool) -> Result<Square, StandardNotationParseError> {
+    let indicater_chars = match piece_type {
+        _ if is_capture => &notation[2..4],
+        PieceType::Pawn => &notation[0..2],
+        _ => &notation[1..3],
+    };
     let err = StandardNotationParseError::InvalidDestinationIndicator(indicater_chars.to_string());
     if indicater_chars.len() != 2 {
         return Err(err);
@@ -105,4 +172,5 @@ pub enum StandardNotationParseError {
     InvalidDestination,
     PieceNotFound(Piece),
     InvalidCastlingNotation,
+    InvalidFileIndicator(char),
 }

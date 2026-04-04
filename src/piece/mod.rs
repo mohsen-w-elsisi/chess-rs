@@ -1,3 +1,5 @@
+pub mod pawn;
+
 use crate::{
     piece_matrix::PieceMatrix,
     square::{ALL_DIRECTIONS, DIAGONAL_DIRECTIONS, Direction, LATTERAL_DIRECTIONS, Square},
@@ -13,6 +15,15 @@ pub struct Piece {
 pub enum Color {
     White,
     Black,
+}
+
+impl Color {
+    pub fn opposite(&self) -> Color {
+        match self {
+            Color::White => Color::Black,
+            Color::Black => Color::White,
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -51,8 +62,8 @@ impl Piece {
 
     fn valid_destinations(&self, start: &Square, board: &PieceMatrix) -> Vec<Square> {
         match self.piece_type {
-            PieceType::Pawn => pawn_move_destinations(start, self.color, board),
-            PieceType::Knight => start.l_shapes(),
+            PieceType::Pawn => pawn::move_destinations(start, self.color, board),
+            PieceType::Knight => start.l_shapes(), // doesn't check if square occupied
 
             PieceType::King => ALL_DIRECTIONS
                 .iter()
@@ -71,8 +82,8 @@ impl Piece {
 
     fn valid_capture_destinations(&self, start: &Square, board: &PieceMatrix) -> Vec<Square> {
         match self.piece_type {
-            PieceType::Pawn => pawn_capture_destinations(start, self.color),
-            PieceType::Knight => start.l_shapes(),
+            PieceType::Pawn => pawn::capture_destinations(start, self.color),
+            PieceType::Knight => start.l_shapes(), // doesn't check if square occupied
 
             PieceType::King => ALL_DIRECTIONS
                 .iter()
@@ -90,55 +101,10 @@ impl Piece {
                 .movement_directions()
                 .unwrap()
                 .iter()
-                .filter_map(|direction| board.first_enemy_piece_square(start, direction, self.color))
+                .filter_map(|direction| {
+                    board.first_enemy_piece_square(start, direction, self.color)
+                })
                 .collect(),
         }
     }
-}
-
-fn pawn_move_destinations(start: &Square, color: Color, board: &PieceMatrix) -> Vec<Square> {
-    let direction = match color {
-        Color::White => Direction::Up,
-        Color::Black => Direction::Down,
-    };
-
-    let basic_move_square = start.move_in_direction(&direction).unwrap();
-
-    if board.get_piece(&basic_move_square).is_some() {
-        vec![]
-    } else {
-        let home_rank = match color {
-            Color::White => 1,
-            Color::Black => 6,
-        };
-
-        if start.rank == home_rank {
-            vec![
-                basic_move_square,
-                basic_move_square.move_in_direction(&direction).unwrap(),
-            ]
-        } else {
-            vec![basic_move_square]
-        }
-    }
-}
-
-fn pawn_capture_destinations(start: &Square, color: Color) -> Vec<Square> {
-    let forward_square = match color {
-        Color::White => start.up(),
-        Color::Black => start.down(),
-    }
-    .unwrap();
-
-    let mut valid_capture_destinations: Vec<Square> = Vec::new();
-
-    if let Ok(right_diagonal_square) = forward_square.right() {
-        valid_capture_destinations.push(right_diagonal_square);
-    }
-
-    if let Ok(left_diagonal_square) = forward_square.left() {
-        valid_capture_destinations.push(left_diagonal_square);
-    }
-
-    valid_capture_destinations
 }

@@ -28,7 +28,7 @@ fn main() {
         }
 
         // parse the input and apply move
-        let mv = from_standard_notation(input, &board.matrix(), &current_color);
+        let mv = from_standard_notation(input, &board, &current_color);
         match mv {
             Ok(mv) => match board.apply_move(&mv) {
                 Ok(_) => {

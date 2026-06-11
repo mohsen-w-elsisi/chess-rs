@@ -1,6 +1,7 @@
 pub mod pawn;
 
 use crate::{
+    r#move::Move,
     piece_matrix::PieceMatrix,
     square::{ALL_DIRECTIONS, DIAGONAL_DIRECTIONS, Direction, LATTERAL_DIRECTIONS, Square},
 };
@@ -50,6 +51,30 @@ impl PieceType {
 }
 
 impl Piece {
+    pub fn get_available_moves(&self, from: &Square, board: &PieceMatrix) -> Vec<Move> {
+        let available_moves: Vec<Move> = self
+            .valid_destinations(from, board)
+            .iter()
+            .map(|square| Move::Normal {
+                from: *from,
+                to: *square,
+            })
+            .collect::<Vec<Move>>();
+
+        let available_capture_moves: Vec<Move> = self
+            .valid_capture_destinations(from, board)
+            .iter()
+            .map(|square| Move::Capture {
+                from: *from,
+                to: *square,
+            })
+            .collect::<Vec<Move>>();
+
+        let all_moves = [available_moves, available_capture_moves].concat();
+
+        return all_moves;
+    }
+
     pub fn is_valid_move(&self, from: &Square, to: &Square, board: &PieceMatrix) -> bool {
         let valid_destinations: Vec<Square> = self.valid_destinations(from, board);
         valid_destinations.contains(&to)

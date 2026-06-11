@@ -2,7 +2,6 @@ use crate::{
     board::Board,
     r#move::{CastleSide, Move},
     piece::{Color, Piece, PieceType, pawn},
-    piece_matrix::PieceMatrix,
     square::{FILE_LETTERS, Square, file_letter_to_index},
 };
 

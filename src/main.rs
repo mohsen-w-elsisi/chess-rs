@@ -1,51 +1,26 @@
-mod board;
-mod r#move;
 mod piece;
-mod piece_matrix;
 mod square;
+mod r#move;
+mod piece_matrix;
+mod board;
 mod standard_notation;
-mod visualise;
+mod game;
+mod console;
+mod robot;
 
 use crate::{
-    piece::Color, standard_notation::from_standard_notation, visualise::visualise_as_ascii,
+    console::{ConsolePlayer, ConsoleVisualiser},
+    game::Game,
+    piece::Color,
+    robot::RobotPlayer,
 };
-use board::Board;
 
 fn main() {
-    let mut board = Board::initial();
-    let mut vis = visualise_as_ascii(&board);
-    let mut current_color = Color::White;
+    let mut game = Game::new(
+        Box::new(ConsolePlayer::new(Color::White)),
+        Box::new(RobotPlayer::new(Color::Black)),
+        Box::new(ConsoleVisualiser),
+    );
 
-    loop {
-        // get input string from user as move in standard chess notation
-        let mut input = String::new();
-        std::io::stdin()
-            .read_line(&mut input)
-            .expect("Failed to read line");
-        let input = input.trim();
-        if input == "exit" {
-            break;
-        }
-
-        // parse the input and apply move
-        let mv = from_standard_notation(input, &board, &current_color);
-        match mv {
-            Ok(mv) => match board.apply_move(&mv) {
-                Ok(_) => {
-                    vis = visualise_as_ascii(&board);
-                    println!("{}", vis);
-                    current_color = match current_color {
-                        Color::White => Color::Black,
-                        Color::Black => Color::White,
-                    };
-                }
-                Err(error) => {
-                    println!("{}", error);
-                }
-            },
-            Err(error) => {
-                println!("{:?}", error);
-            }
-        }
-    }
+    game.play();
 }

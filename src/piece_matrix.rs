@@ -103,6 +103,18 @@ impl PieceMatrix {
         squares
     }
 
+    pub fn is_occupied(&self, square: &Square) -> bool {
+        self.get_piece(square).is_some()
+    }
+    
+    pub fn is_occupied_by_color(&self, square: &Square, color: Color) -> bool {
+        if let Some(piece) = self.get_piece(square) {
+            piece.color == color
+        } else {
+            false
+        }
+    }
+
     pub fn squares_until_blocked(&self, start: &Square, direction: &Direction) -> Vec<Square> {
         let mut squares: Vec<Square> = Vec::new();
         let mut current_square = start.move_in_direction(direction);

@@ -7,6 +7,7 @@ use crate::{
     square::Square,
 };
 
+#[derive(Clone)]
 pub struct Board {
     matrix: PieceMatrix,
     histroy: Vec<(Move, Piece)>,

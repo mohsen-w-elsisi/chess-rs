@@ -2,6 +2,7 @@ pub mod pawn;
 
 use crate::{
     r#move::Move,
+    piece,
     piece_matrix::PieceMatrix,
     square::{ALL_DIRECTIONS, DIAGONAL_DIRECTIONS, Direction, LATTERAL_DIRECTIONS, Square},
 };
@@ -48,6 +49,26 @@ impl PieceType {
             PieceType::King => None,
         }
     }
+
+    pub fn has_long_range_movement(&self) -> bool {
+        match self {
+            PieceType::Pawn => false,
+            PieceType::Knight => false,
+            PieceType::King => false,
+            _ => true,
+        }
+    }
+
+    pub fn value(&self) -> i32 {
+        match self {
+            PieceType::Pawn => 1,
+            PieceType::Knight => 3,
+            PieceType::Bishop => 3,
+            PieceType::Rook => 5,
+            PieceType::Queen => 9,
+            PieceType::King => 0, // King is invaluable
+        }
+    }
 }
 
 impl Piece {
@@ -87,13 +108,20 @@ impl Piece {
 
     fn valid_destinations(&self, start: &Square, board: &PieceMatrix) -> Vec<Square> {
         match self.piece_type {
-            PieceType::Pawn => pawn::move_destinations(start, self.color, board),
-            PieceType::Knight => start.l_shapes(), // doesn't check if square occupied
+            PieceType::Pawn => pawn::move_destinations(start, self.color, board)
+                .into_iter()
+                .filter(|square| !board.is_occupied(square))
+                .collect(),
+            
+            PieceType::Knight => start.l_shapes()
+                .into_iter()
+                .filter(|square| !board.is_occupied(square))
+                .collect(),
 
             PieceType::King => ALL_DIRECTIONS
                 .iter()
                 .filter_map(|direction| start.move_in_direction(&direction).ok())
-                .filter(|square| board.get_piece(square).is_none())
+                .filter(|square| !board.is_occupied(square))
                 .collect(),
 
             piece_type => piece_type
@@ -107,19 +135,21 @@ impl Piece {
 
     fn valid_capture_destinations(&self, start: &Square, board: &PieceMatrix) -> Vec<Square> {
         match self.piece_type {
-            PieceType::Pawn => pawn::capture_destinations(start, self.color),
-            PieceType::Knight => start.l_shapes(), // doesn't check if square occupied
+            PieceType::Pawn => pawn::capture_destinations(start, self.color)
+                .into_iter()
+                .filter(|square| board.is_occupied_by_color(square, self.color.opposite()))
+                .collect(),
+
+            PieceType::Knight => start
+                .l_shapes()
+                .into_iter()
+                .filter(|square| board.is_occupied_by_color(square, self.color.opposite()))
+                .collect(),
 
             PieceType::King => ALL_DIRECTIONS
                 .iter()
                 .filter_map(|direction| start.move_in_direction(&direction).ok())
-                .filter(|square| {
-                    if let Some(occupant_piece) = board.get_piece(square) {
-                        occupant_piece.color != self.color
-                    } else {
-                        false
-                    }
-                })
+                .filter(|square| board.is_occupied_by_color(square, self.color.opposite()))
                 .collect(),
 
             piece_type => piece_type

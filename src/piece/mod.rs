@@ -106,7 +106,7 @@ impl Piece {
         valid_capture_destinations.contains(&to)
     }
 
-    fn valid_destinations(&self, start: &Square, board: &PieceMatrix) -> Vec<Square> {
+    pub fn valid_destinations(&self, start: &Square, board: &PieceMatrix) -> Vec<Square> {
         match self.piece_type {
             PieceType::Pawn => pawn::move_destinations(start, self.color, board)
                 .into_iter()
@@ -133,7 +133,7 @@ impl Piece {
         }
     }
 
-    fn valid_capture_destinations(&self, start: &Square, board: &PieceMatrix) -> Vec<Square> {
+    pub fn valid_capture_destinations(&self, start: &Square, board: &PieceMatrix) -> Vec<Square> {
         match self.piece_type {
             PieceType::Pawn => pawn::capture_destinations(start, self.color)
                 .into_iter()

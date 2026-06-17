@@ -1,6 +1,6 @@
 mod evaluate;
 
-use crate::board::Board;
+use crate::board::{Board, MoveApplicationError};
 use crate::game::Player;
 use crate::r#move::Move;
 use crate::piece::Color;
@@ -27,7 +27,13 @@ impl RobotPlayer {
 
         for m in available_moves {
             let mut new_board = board.clone();
-            new_board.apply_move(&m).unwrap();
+
+            match new_board.apply_move(&m, color) {
+                Ok(_) => {}
+                Err(MoveApplicationError::KingInCheck) => continue,
+                Err(e) => unreachable!("Unexpected error while applying move: {:?}", e),
+            }
+
             let score = self.evaluater.evaluate(&new_board.matrix(), color);
             if score > best_score {
                 best_score = score;

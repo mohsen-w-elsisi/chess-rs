@@ -5,7 +5,15 @@ use crate::{
     square::Square,
 };
 
-pub fn perform_castling(side: &CastleSide, color: &Color, board: &mut Board) -> Result<(), String> {
+pub fn perform_castling(
+    side: &CastleSide,
+    color: &Color,
+    board: &mut Board,
+) -> Result<(), CastlingError> {
+    if board.is_check(*color) {
+        return Err(CastlingError::KingInCheck);
+    }
+    
     let (king_piece, rook_piece) = get_pieces_for_color(&color);
     let (king_home_square, rook_home_square) = get_home_squares(&side, &color);
     let (king_castled_square, rook_castled_square) = get_castled_squares(&side, &color);
@@ -24,18 +32,18 @@ fn validate_pieces_not_moved(
     rook_home_square: &Square,
     king_piece: &Piece,
     history: &Vec<(Move, Piece)>,
-) -> Result<(), String> {
+) -> Result<(), CastlingError> {
     for (mv, piece) in history {
         // checks if the rook has moved or been captured
         if let Move::Normal { from, to } | Move::Capture { from, to } = mv {
             if from == rook_home_square || to == rook_home_square {
-                return Err("Cannot castle after rook has moved or been captured".to_string());
+                return Err(CastlingError::RookMoved);
             }
         }
 
         // checks if king has moved. King cannot be captured
         if piece == king_piece {
-            return Err("Cannot castle after king has moved".to_string());
+            return Err(CastlingError::KingMoved);
         }
     }
 
@@ -96,4 +104,12 @@ fn get_pieces_for_color(color: &Color) -> (Piece, Piece) {
             piece_type: PieceType::Rook,
         },
     )
+}
+
+#[derive(Debug)]
+pub enum CastlingError {
+    KingMoved,
+    RookMoved,
+    KingInCheck,
+    PathBlocked,
 }

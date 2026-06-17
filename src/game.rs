@@ -26,7 +26,7 @@ impl Game {
     pub fn play(&mut self) {
         loop {
             let player_move = self.get_next_move();
-            self.board.apply_move(&player_move).unwrap();
+            self.board.apply_move(&player_move, self.current_turn).unwrap();
             self.visuliser.visualise(&self.board);
             self.flip_turn();
         }

@@ -44,7 +44,7 @@ pub fn from_standard_notation(
 
     for piece_square in potential_pieces {
         if is_en_passent {
-            if pawn::is_valid_en_passent(&piece_square, &destination, &board.history()).is_ok() {
+            if pawn::en_passent::is_valid(&piece_square, &destination, &board.history()).is_ok() {
                 return Ok(Move::EnPassent {
                     from: piece_square,
                     to: destination,

@@ -1,38 +1,63 @@
-use crate::piece::{Color, Piece};
+pub(crate) mod material;
+pub(crate) mod central_control;
+
+use crate::piece::{Color, PieceType};
 use crate::piece_matrix::PieceMatrix;
 
-const MATERIAL_WIEGHT: f64 = 1.0;
-
-pub fn evaluate_position(board: &PieceMatrix, color: Color) -> f64 {
-    Evaluater { board, color }.evaluate()
+pub trait EvaluationCriterion {
+    fn evaluate(&self, board: &PieceMatrix, color: Color) -> f64;
 }
 
-pub struct Evaluater<'a> {
-    board: &'a PieceMatrix,
-    color: Color,
+pub struct Evaluater {
+    criteria: Vec<(i32, Box<dyn EvaluationCriterion>)>,
 }
 
-impl Evaluater<'_> {
-    pub fn evaluate(&self) -> f64 {
-        return self.material_score() * MATERIAL_WIEGHT as f64;
+impl Evaluater {
+    pub fn new(criteria: Vec<(i32, Box<dyn EvaluationCriterion>)>) -> Self {
+        Evaluater { criteria }
     }
 
-    // normalised material score
-    fn material_score(&self) -> f64 {
-        let mut my_pieces: Vec<Piece> = vec![];
-        let mut opponent_pieces: Vec<Piece> = vec![];
+    pub fn evaluate(&self, board: &PieceMatrix, color: Color) -> f64 {
+        let evaluation = self
+            .criteria
+            .iter()
+            .map(|(weight, criterion)| *weight as f64 * criterion.evaluate(board, color))
+            .sum();
 
-        for (_, piece) in self.board.get_pieces() {
-            if piece.color == self.color {
-                my_pieces.push(piece);
-            } else {
-                opponent_pieces.push(piece);
-            }
+        evaluation
+    }
+}
+
+
+pub struct MaterialValues {
+    pub pawn: f64,
+    pub knight: f64,
+    pub bishop: f64,
+    pub rook: f64,
+    pub queen: f64,
+    pub king: f64,
+}
+
+impl MaterialValues {
+    pub fn default() -> MaterialValues {
+        MaterialValues {
+            pawn: 1.0,
+            knight: 3.0,
+            bishop: 3.0,
+            rook: 5.0,
+            queen: 9.0,
+            king: 0.0, // King is invaluable
         }
+    }
 
-        let my_score: i32 = my_pieces.iter().map(|p| p.piece_type.value()).sum();
-        let opponent_score: i32 = opponent_pieces.iter().map(|p| p.piece_type.value()).sum();
-
-        return (my_score - opponent_score) as f64 / (my_score + opponent_score) as f64;
+    pub fn of (&self, piece_type: &PieceType) -> f64 {
+        match piece_type {
+            PieceType::Pawn => self.pawn,
+            PieceType::Knight => self.knight,
+            PieceType::Bishop => self.bishop,
+            PieceType::Rook => self.rook,
+            PieceType::Queen => self.queen,
+            PieceType::King => self.king,
+        }
     }
 }

@@ -59,14 +59,14 @@ impl PieceType {
         }
     }
 
-    pub fn value(&self) -> i32 {
+    pub fn value(&self) -> f64 {
         match self {
-            PieceType::Pawn => 1,
-            PieceType::Knight => 3,
-            PieceType::Bishop => 3,
-            PieceType::Rook => 5,
-            PieceType::Queen => 9,
-            PieceType::King => 0, // King is invaluable
+            PieceType::Pawn => 1.0,
+            PieceType::Knight => 3.0,
+            PieceType::Bishop => 3.0,
+            PieceType::Rook => 5.0,
+            PieceType::Queen => 9.0,
+            PieceType::King => 0.0, // King is invaluable
         }
     }
 }
@@ -95,7 +95,7 @@ impl Piece {
 
         return all_moves;
     }
-
+    
     pub fn is_valid_move(&self, from: &Square, to: &Square, board: &PieceMatrix) -> bool {
         let valid_destinations: Vec<Square> = self.valid_destinations(from, board);
         valid_destinations.contains(&to)

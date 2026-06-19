@@ -1,12 +1,12 @@
-mod piece;
-mod square;
-mod r#move;
-mod piece_matrix;
 mod board;
-mod standard_notation;
-mod game;
 mod console;
+mod game;
+mod r#move;
+mod piece;
+mod piece_matrix;
 mod robot;
+mod square;
+mod standard_notation;
 
 use crate::{
     console::{ConsolePlayer, ConsoleVisualiser},

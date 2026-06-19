@@ -1,9 +1,11 @@
+use std::hash::Hash;
+
 use crate::{
     piece::{Color, Piece, PieceType},
     square::{Direction, Square},
 };
 
-#[derive(Clone)]
+#[derive(Clone, Hash)]
 pub struct PieceMatrix {
     matrix: [[Option<Piece>; 8]; 8],
 }

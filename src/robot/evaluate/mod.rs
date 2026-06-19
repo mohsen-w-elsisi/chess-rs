@@ -1,5 +1,5 @@
-pub(crate) mod material;
 pub(crate) mod central_control;
+pub(crate) mod material;
 
 use crate::piece::{Color, PieceType};
 use crate::piece_matrix::PieceMatrix;
@@ -9,25 +9,30 @@ pub trait EvaluationCriterion {
 }
 
 pub struct Evaluater {
-    criteria: Vec<(i32, Box<dyn EvaluationCriterion>)>,
+    criteria: Vec<(f64, Box<dyn EvaluationCriterion>)>,
 }
 
 impl Evaluater {
-    pub fn new(criteria: Vec<(i32, Box<dyn EvaluationCriterion>)>) -> Self {
+    pub fn new(criteria: Vec<(f64, Box<dyn EvaluationCriterion>)>) -> Self {
         Evaluater { criteria }
     }
 
     pub fn evaluate(&self, board: &PieceMatrix, color: Color) -> f64 {
-        let evaluation = self
+        let evaluation: f64 = self
             .criteria
             .iter()
             .map(|(weight, criterion)| *weight as f64 * criterion.evaluate(board, color))
             .sum();
 
-        evaluation
+        let total_weights = self
+            .criteria
+            .iter()
+            .map(|(weight, _)| *weight as f64)
+            .sum::<f64>();
+
+        evaluation / total_weights
     }
 }
-
 
 pub struct MaterialValues {
     pub pawn: f64,
@@ -50,7 +55,7 @@ impl MaterialValues {
         }
     }
 
-    pub fn of (&self, piece_type: &PieceType) -> f64 {
+    pub fn of(&self, piece_type: &PieceType) -> f64 {
         match piece_type {
             PieceType::Pawn => self.pawn,
             PieceType::Knight => self.knight,

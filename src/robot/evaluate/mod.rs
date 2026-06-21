@@ -9,11 +9,11 @@ pub trait EvaluationCriterion {
 }
 
 pub struct Evaluater {
-    criteria: Vec<(f64, Box<dyn EvaluationCriterion>)>,
+    criteria: Vec<(f64, Box<dyn EvaluationCriterion + Sync>)>,
 }
 
 impl Evaluater {
-    pub fn new(criteria: Vec<(f64, Box<dyn EvaluationCriterion>)>) -> Self {
+    pub fn new(criteria: Vec<(f64, Box<dyn EvaluationCriterion + Sync>)>) -> Self {
         Evaluater { criteria }
     }
 

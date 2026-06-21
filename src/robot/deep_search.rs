@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use rayon::prelude::*;
+
 use crate::{
     board::{Board, MoveApplicationError},
     r#move::Move,
@@ -47,7 +49,7 @@ impl DeepEvaluator {
     fn get_child_evaluations(&self, depth: i32, position: &Board, color: Color) -> Vec<f64> {
         position
             .get_pieces()
-            .into_iter()
+            .into_par_iter()
             .filter(|piece_info| piece_info.1.color == color)
             .flat_map(|(square, piece)| piece.get_available_moves(&square, &position.matrix()))
             .filter_map(|m| new_position_if_legal_move(position, m, color))

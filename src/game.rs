@@ -6,6 +6,7 @@ pub struct Game {
     black_player: Box<dyn Player>,
     visuliser: Box<dyn Visualiser>,
     current_turn: Color,
+    result: Option<GameResult>,
 }
 
 impl Game {
@@ -20,16 +21,50 @@ impl Game {
             black_player,
             visuliser,
             current_turn: Color::White,
+            result: None,
+        }
+    }
+
+    pub fn custom(
+        white_player: Box<dyn Player>,
+        black_player: Box<dyn Player>,
+        visuliser: Box<dyn Visualiser>,
+        board: Board,
+        starting_color: Color,
+    ) -> Game {
+        Game {
+            board,
+            white_player,
+            black_player,
+            visuliser,
+            current_turn: starting_color,
+            result: None,
         }
     }
 
     pub fn play(&mut self) {
         loop {
+            if self.board.is_checkmate(self.current_turn) {
+                self.result = Some(match self.current_turn {
+                    Color::White => GameResult::BlackWins,
+                    Color::Black => GameResult::WhiteWins,
+                });
+                break;
+            }
             let player_move = self.get_next_move();
-            self.board.apply_move(&player_move, self.current_turn).unwrap();
+            self.board
+                .apply_move(&player_move, self.current_turn)
+                .unwrap();
             self.visuliser.visualise(&self.board);
             self.flip_turn();
         }
+        
+        self.visuliser.on_game_end(
+            &self.board,
+            &*self.white_player,
+            &*self.black_player,
+            self.result.clone().unwrap(),
+        );
     }
 
     fn get_next_move(&self) -> Move {
@@ -46,8 +81,23 @@ impl Game {
 
 pub trait Player {
     fn get_move(&self, board: &Board) -> Move;
+    fn name(&self) -> String;
 }
 
 pub trait Visualiser {
     fn visualise(&self, board: &Board);
+    fn on_game_end(
+        &self,
+        board: &Board,
+        white_player: &dyn Player,
+        black_player: &dyn Player,
+        result: GameResult,
+    );
+}
+
+#[derive(Clone)]
+pub enum GameResult {
+    WhiteWins,
+    BlackWins,
+    Draw,
 }

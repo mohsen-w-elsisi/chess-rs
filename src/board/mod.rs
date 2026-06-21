@@ -22,6 +22,10 @@ impl Board {
         }
     }
 
+    pub fn custom(matrix: PieceMatrix, histroy: Vec<(Move, Piece)>) -> Board {
+        Board { matrix, histroy }
+    }
+
     pub fn matrix(&self) -> PieceMatrix {
         self.matrix.clone()
     }
@@ -170,6 +174,32 @@ impl Board {
         }
 
         false
+    }
+
+    pub fn is_checkmate(&self, color: Color) -> bool {
+        if !self.is_check(color) {
+            return false;
+        }
+
+        let friendly_pieces = self
+            .get_pieces()
+            .into_iter()
+            .filter(|(_, piece)| piece.color == color)
+            .collect::<Vec<_>>();
+
+        for (square, piece) in friendly_pieces {
+            let moves = piece.get_available_moves(&square, &self.matrix);
+            for mv in moves {
+                let mut temp_board = self.clone();
+                match temp_board.apply_move(&mv, color) {
+                    Ok(_) => return false,
+                    Err(MoveApplicationError::KingInCheck) => {}
+                    Err(_) => unreachable!(),
+                }
+            }
+        }
+
+        true
     }
 
     pub fn find_piece(&self, piece: Piece) -> Vec<Square> {

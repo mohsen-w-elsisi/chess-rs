@@ -54,6 +54,10 @@ impl Player for RobotPlayer {
     fn get_move(&self, board: &Board) -> Move {
         return self.get_best_move(&board, self.color);
     }
+
+    fn name(&self) -> String {
+        "Robot".to_string()
+    }
 }
 
 fn get_available_moves(board: &PieceMatrix, color: Color) -> Vec<Move> {

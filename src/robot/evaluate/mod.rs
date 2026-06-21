@@ -1,11 +1,12 @@
 pub(crate) mod central_control;
 pub(crate) mod material;
 
+use crate::board::Board;
 use crate::piece::{Color, PieceType};
 use crate::piece_matrix::PieceMatrix;
 
 pub trait EvaluationCriterion {
-    fn evaluate(&self, board: &PieceMatrix, color: Color) -> f64;
+    fn evaluate(&self, board: &Board, color: Color) -> f64;
 }
 
 pub struct Evaluater {
@@ -17,7 +18,7 @@ impl Evaluater {
         Evaluater { criteria }
     }
 
-    pub fn evaluate(&self, board: &PieceMatrix, color: Color) -> f64 {
+    pub fn evaluate(&self, board: &Board, color: Color) -> f64 {
         let evaluation: f64 = self
             .criteria
             .iter()

@@ -1,9 +1,10 @@
 pub mod pawn;
 
 use crate::{
+    board::Board,
     r#move::Move,
     piece,
-    piece_matrix::PieceMatrix,
+    piece_matrix::{self, PieceMatrix},
     square::{ALL_DIRECTIONS, DIAGONAL_DIRECTIONS, Direction, LATTERAL_DIRECTIONS, Square},
 };
 
@@ -72,9 +73,11 @@ impl PieceType {
 }
 
 impl Piece {
-    pub fn get_available_moves(&self, from: &Square, board: &PieceMatrix) -> Vec<Move> {
+    pub fn get_available_moves(&self, from: &Square, board: &Board) -> Vec<Move> {
+        let piece_matrix = &board.matrix();
+
         let available_moves: Vec<Move> = self
-            .valid_destinations(from, board)
+            .valid_destinations(from, piece_matrix)
             .iter()
             .map(|square| Move::Normal {
                 from: *from,
@@ -83,7 +86,7 @@ impl Piece {
             .collect::<Vec<Move>>();
 
         let available_capture_moves: Vec<Move> = self
-            .valid_capture_destinations(from, board)
+            .valid_capture_destinations(from, piece_matrix)
             .iter()
             .map(|square| Move::Capture {
                 from: *from,
@@ -91,11 +94,22 @@ impl Piece {
             })
             .collect::<Vec<Move>>();
 
-        let all_moves = [available_moves, available_capture_moves].concat();
+        let en_passent_moves: Vec<Move> = match self.piece_type {
+            PieceType::Pawn => {
+                let en_passent_move = pawn::en_passent::get_moves(board, from, self.color);
+                match en_passent_move {
+                    Some(m) => vec![m],
+                    None => vec![],
+                }
+            }
+            _ => vec![],
+        };
+
+        let all_moves = [available_moves, available_capture_moves, en_passent_moves].concat();
 
         return all_moves;
     }
-    
+
     pub fn is_valid_move(&self, from: &Square, to: &Square, board: &PieceMatrix) -> bool {
         let valid_destinations: Vec<Square> = self.valid_destinations(from, board);
         valid_destinations.contains(&to)
@@ -112,8 +126,9 @@ impl Piece {
                 .into_iter()
                 .filter(|square| !board.is_occupied(square))
                 .collect(),
-            
-            PieceType::Knight => start.l_shapes()
+
+            PieceType::Knight => start
+                .l_shapes()
                 .into_iter()
                 .filter(|square| !board.is_occupied(square))
                 .collect(),

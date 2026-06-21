@@ -33,7 +33,7 @@ impl DeepEvaluator {
 
     fn recursive_evaluate_position(&self, depth: i32, position: &Board, color: Color) -> f64 {
         if depth == 0 {
-            let eval = self.evaluater.evaluate(&position.matrix(), color);
+            let eval = self.evaluater.evaluate(&position, color);
             return eval;
         }
 
@@ -51,7 +51,7 @@ impl DeepEvaluator {
             .get_pieces()
             .into_par_iter()
             .filter(|piece_info| piece_info.1.color == color)
-            .flat_map(|(square, piece)| piece.get_available_moves(&square, &position.matrix()))
+            .flat_map(|(square, piece)| piece.get_available_moves(&square, &position))
             .filter_map(|m| new_position_if_legal_move(position, m, color))
             .map(|new_pos| self.recursive_evaluate_position(depth - 1, &new_pos, color))
             .collect::<Vec<_>>()

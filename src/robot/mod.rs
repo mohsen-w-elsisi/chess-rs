@@ -23,7 +23,7 @@ impl RobotPlayer {
     }
 
     fn get_best_move(&self, board: &Board, color: Color) -> Move {
-        let available_moves = get_available_moves(&board.matrix(), color);
+        let available_moves = get_available_moves(&board, color);
 
         let mut best_move = available_moves[0];
         let mut best_score: f64 = f64::MIN;
@@ -60,7 +60,7 @@ impl Player for RobotPlayer {
     }
 }
 
-fn get_available_moves(board: &PieceMatrix, color: Color) -> Vec<Move> {
+fn get_available_moves(board: &Board, color: Color) -> Vec<Move> {
     return board
         .get_pieces()
         .into_iter()

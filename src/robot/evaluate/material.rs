@@ -1,4 +1,4 @@
-use crate::{piece::Color, piece_matrix::PieceMatrix, robot::evaluate::{EvaluationCriterion, MaterialValues}};
+use crate::{board::Board, piece::Color, piece_matrix::PieceMatrix, robot::evaluate::{EvaluationCriterion, MaterialValues}};
 
 pub struct MaterialEvaluator {
     config: MaterialEvaluationConfig,
@@ -15,7 +15,7 @@ impl MaterialEvaluator {
 }
 
 impl EvaluationCriterion for MaterialEvaluator {
-    fn evaluate(&self, board: &PieceMatrix, color: Color) -> f64 {
+    fn evaluate(&self, board: &Board, color: Color) -> f64 {
         let mut my_score = 0.0;
         let mut opponent_score = 0.0;
 

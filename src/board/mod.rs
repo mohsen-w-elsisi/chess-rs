@@ -188,7 +188,7 @@ impl Board {
             .collect::<Vec<_>>();
 
         for (square, piece) in friendly_pieces {
-            let moves = piece.get_available_moves(&square, &self.matrix);
+            let moves = piece.get_available_moves(&square, &self);
             for mv in moves {
                 let mut temp_board = self.clone();
                 match temp_board.apply_move(&mv, color) {

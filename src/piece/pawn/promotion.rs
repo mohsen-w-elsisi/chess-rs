@@ -1,4 +1,4 @@
-use crate::{piece::PieceType, piece_matrix::PieceMatrix, square::Square};
+use crate::{piece::{Color, PieceType}, piece_matrix::PieceMatrix, square::Square};
 
 pub fn is_valid(
     from: &Square,
@@ -30,6 +30,14 @@ pub fn is_valid(
     }
 
     Ok(())
+}
+
+pub fn available_promotions(
+    start: &Square,
+    color: Color,
+    board: &PieceMatrix,
+) -> Vec<PieceType> {
+    unimplemented!()
 }
 
 #[derive(Debug)]

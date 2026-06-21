@@ -1,6 +1,6 @@
 use crate::{
-    r#move::Move, piece::Color, piece_matrix::PieceMatrix, robot::evaluate::EvaluationCriterion,
-    square::Square,
+    board::Board, r#move::Move, piece::Color, piece_matrix::PieceMatrix,
+    robot::evaluate::EvaluationCriterion, square::Square,
 };
 
 pub struct PieceActivityEvaluator {
@@ -17,7 +17,7 @@ pub struct PieceActivityEvaluationConfig {
 }
 
 impl EvaluationCriterion for PieceActivityEvaluator {
-    fn evaluate(&self, board: &PieceMatrix, color: Color) -> f64 {
+    fn evaluate(&self, board: &Board, color: Color) -> f64 {
         self.eval_piece_activity(board, color)
     }
 }
@@ -27,14 +27,14 @@ impl PieceActivityEvaluator {
         PieceActivityEvaluator { config }
     }
 
-    pub fn eval_piece_activity(&self, board: &PieceMatrix, color: Color) -> f64 {
+    pub fn eval_piece_activity(&self, board: &Board, color: Color) -> f64 {
         let my_score = self.eval_piece_activity_for_side(board, color);
         let opponent_score = self.eval_piece_activity_for_side(board, color.opposite());
 
         return (my_score - opponent_score) / (my_score + opponent_score);
     }
-    
-    fn eval_piece_activity_for_side(&self, board: &PieceMatrix, color: Color) -> f64 {
+
+    fn eval_piece_activity_for_side(&self, board: &Board, color: Color) -> f64 {
         let mut score = 0.0;
 
         let available_moves = board
@@ -61,6 +61,11 @@ impl PieceActivityEvaluator {
 
                     score += clamped_value_difference * self.config.opponent_piece_threat_weight
                         + self.square_centrality_value(&to);
+                }
+
+                Move::EnPassent { from: _, to } => {
+                    score += self.square_centrality_value(&to)
+                        + self.config.flat_threat_weight * self.config.opponent_piece_threat_weight
                 }
 
                 _ => unimplemented!(),

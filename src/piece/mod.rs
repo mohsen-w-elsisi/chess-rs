@@ -75,39 +75,37 @@ impl PieceType {
 impl Piece {
     pub fn get_available_moves(&self, from: &Square, board: &Board) -> Vec<Move> {
         let piece_matrix = &board.matrix();
+        let mut available_moves: Vec<Move> = Vec::new();
 
-        let available_moves: Vec<Move> = self
-            .valid_destinations(from, piece_matrix)
-            .iter()
-            .map(|square| Move::Normal {
-                from: *from,
-                to: *square,
-            })
-            .collect::<Vec<Move>>();
+        available_moves.extend(
+            self.valid_destinations(from, piece_matrix)
+                .iter()
+                .map(|square| Move::Normal {
+                    from: *from,
+                    to: *square,
+                }),
+        );
 
-        let available_capture_moves: Vec<Move> = self
-            .valid_capture_destinations(from, piece_matrix)
-            .iter()
-            .map(|square| Move::Capture {
-                from: *from,
-                to: *square,
-            })
-            .collect::<Vec<Move>>();
+        available_moves.extend(
+            self.valid_capture_destinations(from, piece_matrix)
+                .iter()
+                .map(|square| Move::Capture {
+                    from: *from,
+                    to: *square,
+                }),
+        );
 
-        let en_passent_moves: Vec<Move> = match self.piece_type {
-            PieceType::Pawn => {
-                let en_passent_move = pawn::en_passent::get_moves(board, from, self.color);
-                match en_passent_move {
-                    Some(m) => vec![m],
-                    None => vec![],
-                }
-            }
-            _ => vec![],
-        };
+        if self.piece_type == PieceType::Pawn {
+            available_moves.extend(pawn::promotion::available_promotions(
+                from,
+                self.color,
+                piece_matrix,
+            ));
 
-        let all_moves = [available_moves, available_capture_moves, en_passent_moves].concat();
+            available_moves.extend(pawn::en_passent::get_moves(board, from, self.color));
+        }
 
-        return all_moves;
+        return available_moves;
     }
 
     pub fn is_valid_move(&self, from: &Square, to: &Square, board: &PieceMatrix) -> bool {

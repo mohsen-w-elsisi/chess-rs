@@ -1,6 +1,10 @@
 use crate::{
-    board::Board, r#move::Move, piece::Color, piece_matrix::PieceMatrix,
-    robot::evaluate::EvaluationCriterion, square::Square,
+    board::Board,
+    r#move::Move,
+    piece::{Color, PieceType},
+    piece_matrix::PieceMatrix,
+    robot::evaluate::EvaluationCriterion,
+    square::Square,
 };
 
 pub struct PieceActivityEvaluator {
@@ -49,17 +53,10 @@ impl PieceActivityEvaluator {
                 Move::Normal { to, from: _ } => score += self.square_centrality_value(&to),
 
                 Move::Capture { to, from } => {
-                    let capturing_piece = board.get_piece(&from).unwrap();
-                    let captured_piece = board.get_piece(&to).unwrap();
+                    let capturing_piece = board.get_piece(&from).unwrap().piece_type;
+                    let captured_piece = board.get_piece(&to).unwrap().piece_type;
 
-                    let clamped_value_difference: f64 =
-                        if captured_piece.piece_type.value() > capturing_piece.piece_type.value() {
-                            captured_piece.piece_type.value() - capturing_piece.piece_type.value()
-                        } else {
-                            self.config.flat_threat_weight
-                        };
-
-                    score += clamped_value_difference * self.config.opponent_piece_threat_weight
+                    score += self.threat_bonus(&capturing_piece, &captured_piece)
                         + self.square_centrality_value(&to);
                 }
 
@@ -68,7 +65,20 @@ impl PieceActivityEvaluator {
                         + self.config.flat_threat_weight * self.config.opponent_piece_threat_weight
                 }
 
-                _ => unimplemented!(),
+                Move::Promotion {
+                    from: _,
+                    to,
+                    capture,
+                    promotion_piece_type: _,
+                } => {
+                    score += self.square_centrality_value(&to);
+                    if capture {
+                        let captured_piece = board.get_piece(&to).unwrap().piece_type;
+                        score += self.threat_bonus(&PieceType::Pawn, &captured_piece);
+                    }
+                }
+
+                Move::Castle { side, color } => unimplemented!(),
             }
         }
 
@@ -82,6 +92,14 @@ impl PieceActivityEvaluator {
             SquareCentrallity::SemiEdge => self.config.semi_edge_control_weight,
             SquareCentrallity::Edge => self.config.edge_control_weight,
         }
+    }
+
+    fn threat_bonus(&self, threatening_piece: &PieceType, threatened_piece: &PieceType) -> f64 {
+        let mut absolute_threat_bonus = threatened_piece.value() - threatening_piece.value();
+        if absolute_threat_bonus < 0.0 {
+            absolute_threat_bonus = self.config.flat_threat_weight;
+        }
+        absolute_threat_bonus * self.config.opponent_piece_threat_weight
     }
 }
 

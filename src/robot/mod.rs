@@ -5,7 +5,6 @@ use crate::board::{Board, MoveApplicationError};
 use crate::game::Player;
 use crate::r#move::Move;
 use crate::piece::Color;
-use crate::piece_matrix::PieceMatrix;
 use crate::robot::deep_search::DeepEvaluator;
 use evaluate::Evaluater;
 

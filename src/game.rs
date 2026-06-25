@@ -45,12 +45,15 @@ impl Game {
     pub fn play(&mut self) {
         loop {
             if self.board.is_checkmate(self.current_turn) {
-                self.result = Some(match self.current_turn {
-                    Color::White => GameResult::BlackWins,
-                    Color::Black => GameResult::WhiteWins,
-                });
+                self.result = Some(GameResult::for_winner(self.current_turn.opposite()));
                 break;
             }
+
+            if self.board.is_stalemate(self.current_turn) {
+                self.result = Some(GameResult::Draw);
+                break;
+            }
+            
             let player_move = self.get_next_move();
             self.board
                 .apply_move(&player_move, self.current_turn)
@@ -58,7 +61,7 @@ impl Game {
             self.visuliser.visualise(&self.board);
             self.flip_turn();
         }
-        
+
         self.visuliser.on_game_end(
             &self.board,
             &*self.white_player,
@@ -100,4 +103,13 @@ pub enum GameResult {
     WhiteWins,
     BlackWins,
     Draw,
+}
+
+impl GameResult {
+    pub fn for_winner(color: Color) -> GameResult {
+        match color {
+            Color::White => GameResult::WhiteWins,
+            Color::Black => GameResult::BlackWins,
+        }
+    }
 }

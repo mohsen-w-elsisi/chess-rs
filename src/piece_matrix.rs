@@ -5,7 +5,7 @@ use crate::{
     square::{Direction, Square},
 };
 
-#[derive(Clone, Hash)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct PieceMatrix {
     matrix: [[Option<Piece>; 8]; 8],
 }

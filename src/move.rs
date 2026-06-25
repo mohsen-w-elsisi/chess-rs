@@ -1,6 +1,6 @@
 use crate::{piece::{Color, PieceType}, square::Square};
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Move {
     Normal { from: Square, to: Square },
     Capture { from: Square, to: Square },
@@ -9,7 +9,7 @@ pub enum Move {
     EnPassent { from: Square, to: Square },
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum CastleSide {
     KingSide,
     QueenSide,

@@ -83,6 +83,10 @@ impl Board {
                     return Err(MoveApplicationError::AttemptCaptureOwnPiece);
                 }
 
+                // if captured_piece.piece_type == PieceType::King {
+                //     return Err(MoveApplicationError::AttemptCaptureKing);
+                // }
+
                 self.remove_piece(to);
                 self.remove_piece(from);
                 self.place_piece(to, piece);
@@ -167,7 +171,29 @@ impl Board {
             .collect::<Vec<_>>();
 
         for (square, piece) in enemy_pieces {
-            let capture_moves = piece.valid_capture_destinations(&square, &self.matrix);
+            let mut capture_moves = piece.valid_capture_destinations(&square, &self.matrix);
+            if piece.piece_type == PieceType::Pawn {
+                capture_moves.extend(
+                    pawn::promotion::available_promotions(&square, piece.color, &self.matrix)
+                        .iter()
+                        .filter_map(|mv| match mv {
+                            Move::Promotion {
+                                from: _,
+                                to,
+                                capture,
+                                promotion_piece_type: _,
+                            } => {
+                                if *capture {
+                                    Some(to)
+                                } else {
+                                    None
+                                }
+                            }
+                            _ => unreachable!(),
+                        })
+                        .collect::<Vec<_>>(),
+                );
+            }
             if capture_moves.contains(&king_square) {
                 return true;
             }
@@ -202,6 +228,29 @@ impl Board {
         true
     }
 
+    pub fn is_stalemate(&self, color: Color) -> bool {
+        if self.is_check(color) {
+            return false;
+        }
+
+        let available_move_count = self
+            .get_pieces()
+            .into_iter()
+            .filter(|(_, piece)| piece.color == color)
+            .flat_map(|(square, piece)| piece.get_available_moves(&square, &self))
+            .filter(|mv| {
+                let mut temp_board = self.clone();
+                match temp_board.apply_move(mv, color) {
+                    Ok(_) => true,
+                    Err(MoveApplicationError::KingInCheck) => false,
+                    Err(e) => unreachable!(),
+                }
+            })
+            .count();
+
+        available_move_count == 0
+    }
+
     pub fn find_piece(&self, piece: Piece) -> Vec<Square> {
         self.matrix.find_piece(piece)
     }
@@ -229,6 +278,7 @@ pub enum MoveApplicationError {
     PieceNotFound,
     InvalidMoveForPieceType,
     AttemptCaptureOwnPiece,
+    AttemptCaptureKing,
     Castling { error: CastlingError },
     Promotion { error: pawn::promotion::Error },
     EnPassent { error: pawn::en_passent::Error },

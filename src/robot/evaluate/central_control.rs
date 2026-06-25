@@ -2,7 +2,6 @@ use crate::{
     board::Board,
     r#move::Move,
     piece::{Color, PieceType},
-    piece_matrix::PieceMatrix,
     robot::evaluate::EvaluationCriterion,
     square::Square,
 };
